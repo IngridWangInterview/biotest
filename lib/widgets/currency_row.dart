@@ -43,9 +43,6 @@ class CurrencyRow extends ConsumerWidget {
             onChanged: (value) {
               if (value.isNotEmpty) {
                 double amount = double.tryParse(value) ?? 0;
-                if (!isBase && conversionRate != null) {
-                  amount = amount * conversionRate!;
-                }
                 onAmountChanged(amount);
               }
             },

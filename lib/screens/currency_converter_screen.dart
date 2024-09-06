@@ -14,26 +14,52 @@ class CurrencyConverterScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final baseCurrency = ref.watch(selectedBaseCurrencyProvider);
     final targetCurrency = ref.watch(selectedTargetCurrencyProvider);
-    final baseAmountController = useTextEditingController(text: '1');
+    final baseAmountController = useTextEditingController();
     final targetAmountController = useTextEditingController();
     final conversionResult = ref.watch(conversionResultProvider);
     final targetConversionResult = ref.watch(targetConversionResultProvider);
 
-    useEffect(() {
-      void listener() {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+    final updateAmounts = useCallback((String baseAmount, String targetAmount) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (baseAmount.isNotEmpty && baseCurrency != null) {
           ref.read(baseAmountProvider.notifier).state =
-              double.tryParse(baseAmountController.text) ?? 0;
-        });
+              double.tryParse(baseAmount) ?? 0;
+        }
+        if (targetAmount.isNotEmpty && targetCurrency != null) {
+          ref.read(targetAmountProvider.notifier).state =
+              double.tryParse(targetAmount) ?? 0;
+        }
+      });
+    }, [baseCurrency, targetCurrency]);
+
+    useEffect(() {
+      void baseListener() =>
+          updateAmounts(baseAmountController.text, targetAmountController.text);
+      void targetListener() =>
+          updateAmounts(baseAmountController.text, targetAmountController.text);
+
+      baseAmountController.addListener(baseListener);
+      targetAmountController.addListener(targetListener);
+
+      return () {
+        baseAmountController.removeListener(baseListener);
+        targetAmountController.removeListener(targetListener);
+      };
+    }, [baseAmountController, targetAmountController, updateAmounts]);
+
+    useEffect(() {
+      if (baseCurrency != null && targetCurrency != null) {
+        final baseAmount = ref.read(baseAmountProvider) ?? 0;
+        final targetAmount = ref.read(targetAmountProvider) ?? 0;
+
+        baseAmountController.text =
+            formatCurrency(baseAmount, int.parse(baseCurrency.amountDecimal));
+        targetAmountController.text = formatCurrency(
+            targetAmount, int.parse(targetCurrency.amountDecimal));
       }
 
-      baseAmountController.addListener(listener);
-      targetAmountController.addListener(listener);
-      return () {
-        baseAmountController.removeListener(listener);
-        targetAmountController.removeListener(listener);
-      };
-    }, [baseAmountController, targetAmountController]);
+      return null;
+    }, [baseCurrency, targetCurrency]);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Currency Converter')),
@@ -93,10 +119,12 @@ class CurrencyConverterScreen extends HookConsumerWidget {
               controller: targetAmountController,
               conversionRate: targetConversionResult,
               onAmountChanged: (amount) {
-                baseAmountController.text = formatCurrency(
-                  amount,
-                  int.parse(baseCurrency?.amountDecimal ?? '2'),
-                );
+                if (targetConversionResult != null) {
+                  baseAmountController.text = formatCurrency(
+                    amount * targetConversionResult,
+                    int.parse(baseCurrency?.amountDecimal ?? '2'),
+                  );
+                }
               },
             ),
           ],
