@@ -20,10 +20,6 @@ class CurrencyConverterScreen extends HookConsumerWidget {
     final targetConversionResult = ref.watch(targetConversionResultProvider);
 
     useEffect(() {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(baseAmountProvider.notifier).state = 1;
-      });
-
       void listener() {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ref.read(baseAmountProvider.notifier).state =
