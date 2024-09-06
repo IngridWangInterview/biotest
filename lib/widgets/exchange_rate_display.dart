@@ -1,5 +1,6 @@
 import 'package:bito_test/models/currency.dart';
 import 'package:bito_test/utils/formatters.dart';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 
 class ExchangeRateDisplay extends StatelessWidget {
@@ -15,8 +16,15 @@ class ExchangeRateDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (baseCurrency != null && targetCurrency != null) {
+      final exchangeAmount =
+          (Decimal.parse(targetCurrency!.twdPrice.toString()) /
+                  Decimal.parse(baseCurrency!.twdPrice.toString()))
+              .toDecimal(
+                  scaleOnInfinitePrecision:
+                      int.parse(targetCurrency!.amountDecimal));
+
       return Text(
-        '1 ${baseCurrency!.currency} ≈ ${formatCurrency(targetCurrency!.twdPrice / baseCurrency!.twdPrice, int.parse(targetCurrency!.amountDecimal))} ${targetCurrency!.currency}',
+        '1 ${baseCurrency!.currency} ≈ ${formatCurrency(exchangeAmount, int.parse(targetCurrency!.amountDecimal))} ${targetCurrency!.currency}',
         style: Theme.of(context).textTheme.bodyMedium,
         textAlign: TextAlign.center,
       );

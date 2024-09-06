@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:decimal/decimal.dart';
 
 import '../config/app_config.dart';
 import '../models/currency.dart';
@@ -24,27 +25,40 @@ final selectedBaseCurrencyProvider =
 final selectedTargetCurrencyProvider =
     StateProvider.autoDispose<Currency?>((ref) => null);
 
-final baseAmountProvider = StateProvider.autoDispose<double?>((ref) => null);
-final targetAmountProvider = StateProvider.autoDispose<double?>((ref) => null);
+final baseAmountProvider = StateProvider.autoDispose<Decimal?>((ref) => null);
+final targetAmountProvider = StateProvider.autoDispose<Decimal?>((ref) => null);
 
-final conversionResultProvider = Provider.autoDispose<double?>((ref) {
+final conversionResultProvider = Provider.autoDispose<Decimal?>((ref) {
   final baseCurrency = ref.watch(selectedBaseCurrencyProvider);
   final targetCurrency = ref.watch(selectedTargetCurrencyProvider);
-  final amount = ref.watch(baseAmountProvider);
 
-  if (baseCurrency != null && targetCurrency != null && amount != null) {
-    return (targetCurrency.twdPrice / baseCurrency.twdPrice);
+  if (baseCurrency != null && targetCurrency != null) {
+    final baseRate = Decimal.parse(baseCurrency.twdPrice.toString());
+    final targetRate = Decimal.parse(targetCurrency.twdPrice.toString());
+
+    if (baseRate == Decimal.zero) {
+      return null;
+    }
+
+    return (targetRate / baseRate).toDecimal(scaleOnInfinitePrecision: 8);
   }
   return null;
 });
 
-final targetConversionResultProvider = Provider.autoDispose<double?>((ref) {
+final targetConversionResultProvider = Provider.autoDispose<Decimal?>((ref) {
   final baseCurrency = ref.watch(selectedBaseCurrencyProvider);
   final targetCurrency = ref.watch(selectedTargetCurrencyProvider);
   final amount = ref.watch(targetAmountProvider);
 
   if (baseCurrency != null && targetCurrency != null && amount != null) {
-    return (baseCurrency.twdPrice / targetCurrency.twdPrice);
+    final baseRate = Decimal.parse(baseCurrency.twdPrice.toString());
+    final targetRate = Decimal.parse(targetCurrency.twdPrice.toString());
+
+    if (baseRate == Decimal.zero) {
+      return null; // 避免除零错误
+    }
+
+    return (baseRate / targetRate).toDecimal(scaleOnInfinitePrecision: 8);
   }
   return null;
 });

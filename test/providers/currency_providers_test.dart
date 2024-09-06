@@ -1,34 +1,49 @@
 import 'package:bito_test/models/currency.dart';
 import 'package:bito_test/providers/currency_providers.dart';
+import 'package:bito_test/repositories/currency_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockCurrencyRepository extends Mock implements CurrencyRepository {}
 
 void main() {
-  test('conversionResultProvider returns correct conversion result', () async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
+  late ProviderContainer container;
+  late MockCurrencyRepository mockRepository;
 
-    const baseCurrency = Currency(
-        id: "1",
-        currency: 'USD',
-        currencyIcon: 'url',
-        twdPrice: 10.0,
-        amountDecimal: '2');
-    const targetCurrency = Currency(
-        id: "2",
-        currency: 'EUR',
-        currencyIcon: 'url',
-        twdPrice: 20.0,
-        amountDecimal: '2');
-    const amount = 100.0;
+  setUp(() {
+    mockRepository = MockCurrencyRepository();
+    container = ProviderContainer(
+      overrides: [
+        currencyRepositoryProvider.overrideWithValue(mockRepository),
+      ],
+    );
+  });
 
-    container.read(selectedBaseCurrencyProvider.notifier).state = baseCurrency;
-    container.read(selectedTargetCurrencyProvider.notifier).state =
-        targetCurrency;
-    container.read(baseAmountProvider.notifier).state = amount;
+  tearDown(() {
+    container.dispose();
+  });
 
-    final result = container.read(conversionResultProvider);
+  test('currenciesProvider should return list of currencies', () async {
+    final currencies = [
+      const Currency(
+          currency: 'USD',
+          twdPrice: 30.5,
+          amountDecimal: '2',
+          id: '1',
+          currencyIcon: ''),
+      const Currency(
+          currency: 'EUR',
+          twdPrice: 35.2,
+          amountDecimal: '2',
+          id: '2',
+          currencyIcon: ''),
+    ];
 
-    expect(result, 50.0); // 100 * 10 / 20 = 50
+    when(() => mockRepository.getCurrencies())
+        .thenAnswer((_) async => currencies);
+
+    final result = await container.read(currenciesProvider.future);
+    expect(result, currencies);
   });
 }

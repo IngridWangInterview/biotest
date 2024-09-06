@@ -1,6 +1,7 @@
 import 'package:bito_test/utils/formatters.dart';
 import 'package:bito_test/widgets/currency_row.dart';
 import 'package:bito_test/widgets/exchange_rate_display.dart';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -23,11 +24,11 @@ class CurrencyConverterScreen extends HookConsumerWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (baseAmount.isNotEmpty && baseCurrency != null) {
           ref.read(baseAmountProvider.notifier).state =
-              double.tryParse(baseAmount) ?? 0;
+              Decimal.parse(baseAmount);
         }
         if (targetAmount.isNotEmpty && targetCurrency != null) {
           ref.read(targetAmountProvider.notifier).state =
-              double.tryParse(targetAmount) ?? 0;
+              Decimal.parse(targetAmount);
         }
       });
     }, [baseCurrency, targetCurrency]);
@@ -49,8 +50,8 @@ class CurrencyConverterScreen extends HookConsumerWidget {
 
     useEffect(() {
       if (baseCurrency != null && targetCurrency != null) {
-        final baseAmount = ref.read(baseAmountProvider) ?? 0;
-        final targetAmount = ref.read(targetAmountProvider) ?? 0;
+        final baseAmount = ref.read(baseAmountProvider) ?? Decimal.zero;
+        final targetAmount = ref.read(targetAmountProvider) ?? Decimal.zero;
 
         baseAmountController.text =
             formatCurrency(baseAmount, int.parse(baseCurrency.amountDecimal));

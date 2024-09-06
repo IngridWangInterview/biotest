@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -18,7 +19,7 @@ class CurrencyConverterForm extends HookConsumerWidget {
 
     useEffect(() {
       listener() {
-        final amount = double.tryParse(amountController.text);
+        final amount = Decimal.tryParse(amountController.text);
         ref.read(baseAmountProvider.notifier).state = amount;
       }
 
@@ -31,7 +32,7 @@ class CurrencyConverterForm extends HookConsumerWidget {
       children: [
         TextField(
           controller: amountController,
-          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: const InputDecoration(
             labelText: 'Amount',
             border: OutlineInputBorder(),
@@ -46,7 +47,7 @@ class CurrencyConverterForm extends HookConsumerWidget {
             baseCurrency != null &&
             targetCurrency != null)
           Text(
-            '${formatCurrency(double.parse(amountController.text), int.parse(baseCurrency.amountDecimal))} ${baseCurrency.currency} = '
+            '${formatCurrency(Decimal.parse(amountController.text), int.parse(baseCurrency.amountDecimal))} ${baseCurrency.currency} = '
             '${formatCurrency(conversionResult, int.parse(targetCurrency.amountDecimal))} ${targetCurrency.currency}',
             style: Theme.of(context).textTheme.titleMedium,
             textAlign: TextAlign.center,

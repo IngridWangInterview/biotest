@@ -1,5 +1,6 @@
 import 'package:bito_test/providers/currency_providers.dart';
 import 'package:bito_test/widgets/currency_selector.dart';
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,8 +10,8 @@ class CurrencyRow extends ConsumerWidget {
   final bool isBase;
   final Currency? currency;
   final TextEditingController controller;
-  final double? conversionRate;
-  final Function(double) onAmountChanged;
+  final Decimal? conversionRate;
+  final Function(Decimal) onAmountChanged;
 
   const CurrencyRow({
     super.key,
@@ -42,7 +43,7 @@ class CurrencyRow extends ConsumerWidget {
             ),
             onChanged: (value) {
               if (value.isNotEmpty) {
-                double amount = double.tryParse(value) ?? 0;
+                Decimal amount = Decimal.parse(value);
                 onAmountChanged(amount);
               }
             },
